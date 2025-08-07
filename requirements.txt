@@ -5,3 +5,4 @@ PyPDF2==3.0.1
 requests==2.31.0
 deep-translator
 fitz
+gunicorn==22.0.0
