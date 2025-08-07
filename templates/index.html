@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Growthzi</title>
+  <style>
+    body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 40px;
+  background-color: #fdfdfd;
+  color: #333;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+  gap: 20px;                
+  margin-bottom: 30px;
+}
+
+.buttons button {
+  padding: 12px 25px;
+  font-size: 16px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.buttons button:hover {
+  background-color: #125ea3;
+}
+
+.section {
+  display: none;
+  margin-top: 30px;
+  padding: 25px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+input[type="file"],
+input[type="number"],
+textarea,
+select {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin: 12px 0 20px 0;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+button {
+  font-size: 15px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+#result {
+  white-space: pre-wrap;
+  background: #f0f8ff;
+  padding: 20px;
+  margin: 30px auto 0 auto;
+  border-radius: 8px;
+  border-left: 5px solid #1976d2;
+  max-width: 600px;
+  font-family: monospace;
+}
+
+
+    input, select, textarea {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      padding: 8px;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="buttons">
+    <button onclick="showSection('uploadSection')">Resume</button>
+    <button onclick="showSection('languageSection')">Language</button>
+    <button onclick="showSection('currencySection')">Currency</button>
+  </div>
+
+  <div id="uploadSection" class="section">
+    <input type="file" id="resumeFile" accept=".pdf,.docx" />
+    <button onclick="uploadResume()">Upload</button>
+  </div>
+
+  <div id="languageSection" class="section">
+    <textarea id="textToTranslate" placeholder="Enter text to translate..."></textarea>
+    <select id="targetLang">
+  <option value="">Select Language</option>
+  <option value="as">Assamese</option>
+  <option value="bn">Bengali</option>
+  <option value="gu">Gujarati</option>
+  <option value="hi">Hindi</option>
+  <option value="kn">Kannada</option>
+  <option value="ks">Kashmiri</option>
+  <option value="kok">Konkani</option>
+  <option value="ml">Malayalam</option>
+  <option value="mr">Marathi</option>
+  <option value="ne">Nepali</option>
+  <option value="or">Odia</option>
+  <option value="pa">Punjabi</option>
+  <option value="sa">Sanskrit</option>
+  <option value="sd">Sindhi</option>
+  <option value="si">Sinhala</option> 
+  <option value="ta">Tamil</option>
+  <option value="te">Telugu</option>
+  <option value="ur">Urdu</option>
+  <option value="mai">Maithili</option>
+  <option value="mni">Manipuri</option>
+</select>
+
+    <button onclick="translateText()">Translate</button>
+  </div>
+
+  <div id="currencySection" class="section">
+    <input type="number" id="basePrice" placeholder="Enter Product Price in INR" />
+    <select id="currencyType">
+    </select>
+    <button onclick="convertCurrency()">Convert</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    function showSection(id) {
+      const sections = document.querySelectorAll('.section');
+      sections.forEach(section => section.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      document.getElementById('result').innerText = '';
+    }
+
+    async function uploadResume() {
+      const fileInput = document.getElementById('resumeFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a file");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/resume', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+      }
+    }
+
+    async function translateText() {
+      const content = document.getElementById('textToTranslate').value;
+      const target_lang = document.getElementById('targetLang').value;
+
+      if (!content || !target_lang) {
+        alert("Please enter text and select a target language.");
+        return;
+      }
+
+      const res = await fetch('/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, target_lang })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        document.getElementById('result').innerText = 
+          `Original: ${data.original}\nTranslated: ${data.translated}\nLanguage: ${data.target_language}`;
+      }
+    }
+
+    async function convertCurrency() {
+      const base = document.getElementById('basePrice').value;
+      const currency = document.getElementById('currencyType').value;
+
+      if (!base || !currency) {
+        alert("Please Enter The Product Price In INR.");
+        return;
+      }
+
+      const res = await fetch('/currency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ BasePrice: parseFloat(base), Currency: currency })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        document.getElementById('result').innerText = 
+          `Converted Amount: ${data.rate} ${data.currency}`;
+      }
+    }
+
+    window.onload = async function () {
+      const res = await fetch('/typeahead');
+      const currencies = await res.json();
+      const select = document.getElementById('currencyType');
+      currencies.forEach(cur => {
+        const opt = document.createElement('option');
+        opt.value = cur;
+        opt.textContent = cur;
+        select.appendChild(opt);
+      });
+    };
+  </script>
+
+</body>
+</html>
