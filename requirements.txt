@@ -6,3 +6,5 @@ requests==2.31.0
 deep-translator
 gunicorn==22.0.0
 PYMuPDF
+docx2txt
+flask-cors
